@@ -1,0 +1,34 @@
+---
+- name: install elrepo repo
+  dnf:
+    name: https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
+    state: present
+    disable_gpg_check: yes
+
+- name: install config-manager alias for dnf
+  shell: dnf -y install 'dnf-command(config-manager)'
+
+- name: enable elrepo-kernel repo
+  shell: dnf config-manager --set-enabled elrepo-kernel
+
+- name: install kernel-ml dnf package
+  dnf:
+    name: kernel-ml
+    state: present
+  register: install_kernel_ml_cmd
+
+- name: reboot the server if kernel-ml is newly installed
+  reboot:
+  when: install_kernel_ml_cmd.changed|bool
+
+- name: enable btrfs-progs repo
+  shell: dnf -y copr enable ngompa/btrfs-progs-el8
+
+- name: install btrfs related packages
+  dnf:
+    name:
+      - btrfs-progs
+      - libbtrfs
+      - libbtrfsutil
+      - python3-btrfsutil
+    state: present
